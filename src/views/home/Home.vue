@@ -3,73 +3,14 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
-       <home-swiper :banners = "banners"/>
-       <remommend-view :recommends = "recommends"/>
-       <feature-view/>
+       <scroll class="content">
+          <home-swiper :banners = "banners"/>
+          <remommend-view :recommends = "recommends"/>
+          <feature-view/>
 
-       <tab-control class="tab-control" :titles = "['流行',  '新款', '精选']"/>
-       <ul>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-         <li>列表1</li>
-       </ul>
+          <tab-control class="tab-control" :titles = "['流行',  '新款', '精选']" @tabClick="tabClick"/>
+          <goods-list :goods = "showGoods"/>
+       </scroll>
     </div>
 </template>
 
@@ -80,6 +21,8 @@ import HomeSwiper from './childComps/HomeSwiper'
 import RemommendView from './childComps/RemommendView'
 import FeatureView from './childComps/FeatureView'
 import TabControl from 'components/content/tabControl/TabControl'
+import GoodsList from 'components/content/goodslist/GoodsList'
+import Scroll from 'components/common/scroll/Scroll'
 
 import { getHomeMultiData, getHomeGoods } from 'network/home'
 
@@ -91,7 +34,9 @@ export default {
     HomeSwiper,
     RemommendView,
     FeatureView,
-    TabControl
+    TabControl,
+    GoodsList,
+    Scroll
   },
   data () {
     return {
@@ -104,7 +49,13 @@ export default {
         'pop':  {page: 0, list: []},
         'sell': {page: 0, list: []},
         'new': {page: 0, list: []}
-      }
+      },
+      currentType: 'pop'
+    }
+  },
+  computed: {
+    showGoods () {
+      return this.goods[this.currentType].list
     }
   },
   created () {
@@ -118,6 +69,9 @@ export default {
 
   },
   methods: {
+    /** 
+     * 网络请求相关的方法
+     * */ 
     getHomeMultiDataD()
     {
       getHomeMultiData().then(res => {
@@ -132,6 +86,22 @@ export default {
         this.goods[type].list.push(...res.data.data.list)
         this.goods[type].page += 1
       })
+    },
+    /**
+     * 事件监听相关的方法
+     */
+    tabClick (index) {
+      // console.log( index )
+      switch (index) {
+        case 0 :
+          this.currentType = 'pop'
+          break
+        case 1:
+          this.currentType = 'sell'
+          break
+        case 2:
+          this.currentType = 'new'
+      }
     }
   }
 }
@@ -150,10 +120,27 @@ export default {
 
   #home {
     padding-top: 44px;
+    /* 100%的视口高度 */
+    position: relative;
+    height: 100vh;
   }
 
   .tab-control {
     position: sticky;
     top: 44px;
+    z-index: 9;
+    background-color: #fff;
   }
+  .content {
+    /* height: 300px; */
+    overflow: hidden;
+    position: absolute;
+    top: 44px;
+    bottom: 49px;
+  }
+  /* .content {
+    height: calc(100% - 98px);
+    overflow: hidden;
+    margin-top: 44px;
+  } */
 </style>
