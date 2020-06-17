@@ -16,10 +16,23 @@ export default {
             scroll: null
         }
     },
+    props: {
+        // 由父组件决定是否实时监听
+        probeType: {
+            type: Number,
+            default: 0
+        }
+    },
     mounted () {
         this.scroll = new BScroll(this.$refs.wrapper, {
-            
+            click: true,
+            probeType: this.probeType
         })
+    },
+    methods: {
+        scrollTo(x, y, time = 500) {
+            this.scroll.scrollTo(x, y, time)
+        }
     }
 }
 </script>

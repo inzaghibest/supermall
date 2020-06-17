@@ -3,14 +3,20 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
-       <scroll class="content">
+       <scroll class="content" ref = "scroll" :probeType = "3">
           <home-swiper :banners = "banners"/>
+
           <remommend-view :recommends = "recommends"/>
+
           <feature-view/>
 
-          <tab-control class="tab-control" :titles = "['流行',  '新款', '精选']" @tabClick="tabClick"/>
+          <tab-control class="tab-control" 
+                       :titles = "['流行',  '新款', '精选']" 
+                       @tabClick="tabClick"/>
+
           <goods-list :goods = "showGoods"/>
        </scroll>
+       <back-top @click.native = "backClick"/>
     </div>
 </template>
 
@@ -23,6 +29,7 @@ import FeatureView from './childComps/FeatureView'
 import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goodslist/GoodsList'
 import Scroll from 'components/common/scroll/Scroll'
+import BackTop from 'components/content/backTop/BackTop'
 
 import { getHomeMultiData, getHomeGoods } from 'network/home'
 
@@ -36,7 +43,8 @@ export default {
     FeatureView,
     TabControl,
     GoodsList,
-    Scroll
+    Scroll,
+    BackTop
   },
   data () {
     return {
@@ -91,7 +99,6 @@ export default {
      * 事件监听相关的方法
      */
     tabClick (index) {
-      // console.log( index )
       switch (index) {
         case 0 :
           this.currentType = 'pop'
@@ -102,6 +109,11 @@ export default {
         case 2:
           this.currentType = 'new'
       }
+    },
+
+    // 实现回到顶部的点击事件 
+    backClick () {
+      this.$refs.scroll.scrollTo(0, 0, 800)
     }
   }
 }
@@ -126,7 +138,7 @@ export default {
   }
 
   .tab-control {
-    position: sticky;
+    /* position: sticky; */
     top: 44px;
     z-index: 9;
     background-color: #fff;
