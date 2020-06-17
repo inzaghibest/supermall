@@ -3,20 +3,24 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
-       <scroll class="content" ref = "scroll" :probeType = "3">
-          <home-swiper :banners = "banners"/>
+       <scroll class="content" ref = "scroll" 
+              :probeType = "3" 
+              :pull-up-load = "true"
+              @scroll="contentScroll"
+              @pullUp="pullUp">
+          <home-swiper :banners = "banners" @homeimgload = "homeImgLoad"/>
 
           <remommend-view :recommends = "recommends"/>
 
           <feature-view/>
 
-          <tab-control class="tab-control" 
+          <tab-control v-show="isTabFixed" class="fiexd" ref="tabControl"
                        :titles = "['流行',  '新款', '精选']" 
                        @tabClick="tabClick"/>
 
           <goods-list :goods = "showGoods"/>
        </scroll>
-       <back-top @click.native = "backClick"/>
+       <back-top @click.native = "backClick" v-show = "isShow"/>
     </div>
 </template>
 
@@ -30,7 +34,7 @@ import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goodslist/GoodsList'
 import Scroll from 'components/common/scroll/Scroll'
 import BackTop from 'components/content/backTop/BackTop'
-
+import {debounce} from 'common/utils.js'
 import { getHomeMultiData, getHomeGoods } from 'network/home'
 
 
@@ -58,7 +62,10 @@ export default {
         'sell': {page: 0, list: []},
         'new': {page: 0, list: []}
       },
-      currentType: 'pop'
+      currentType: 'pop',
+      isShow: false,
+      tabOffsetTop: 0,
+      isTabFixed: false
     }
   },
   computed: {
@@ -72,9 +79,27 @@ export default {
 
     // 2.请求首页数据
         this.getHomeGoodsD('pop');
-        this.getHomeGoodsD('sell');
         this.getHomeGoodsD('new');
+        this.getHomeGoodsD('sell');
+  },
+  mounted () {
+        // 监听图片加载完成事件
+        const refresh = debounce(this.$refs.scroll.refresh, 200)
+        this.$bus.$on('itemImgLoad', () => {
+          refresh()
+        })
 
+        // 获取tab-control的offsettop属性
+        // 所有的组件都有一个$el属性,用于获取组件中的元素
+        // this.tabOffsetTop = this.$refs.TabControl.$el.offsetTop
+        // console.log(this.$refs.tabControl.$el.offsetTop)
+              // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+  },
+  updated () {
+        this.$nextTick(() => {
+          this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
+          console.log(this.tabOffsetTop)
+        })
   },
   methods: {
     /** 
@@ -90,9 +115,9 @@ export default {
     getHomeGoodsD (type) {
       let page = (this.goods[type].page) + 1
       getHomeGoods(type, page).then(res=> {
-        console.log(res)
         this.goods[type].list.push(...res.data.data.list)
         this.goods[type].page += 1
+        this.$refs.scroll.scroll.finishPullUp()
       })
     },
     /**
@@ -104,16 +129,32 @@ export default {
           this.currentType = 'pop'
           break
         case 1:
-          this.currentType = 'sell'
+          this.currentType = 'new'
           break
         case 2:
-          this.currentType = 'new'
+          this.currentType = 'sell'
       }
     },
 
     // 实现回到顶部的点击事件 
     backClick () {
       this.$refs.scroll.scrollTo(0, 0, 800)
+    },
+
+    // 滚动事件监听
+    contentScroll (position) {
+      this.isShow = (0 - position.y) > 1000 ? true : false
+      // 1.决定tabFixed是否显示
+      this.isTabFixed = position.y < -this.tabOffsetTop
+    },
+
+    // 上拉加载更多
+    pullUp () {
+      this.getHomeGoodsD(this.currentType)
+    },
+
+    homeImgLoad () {
+
     }
   }
 }
@@ -137,8 +178,9 @@ export default {
     height: 100vh;
   }
 
-  .tab-control {
+  .fixed {
     /* position: sticky; */
+    position: fixed;
     top: 44px;
     z-index: 9;
     background-color: #fff;
