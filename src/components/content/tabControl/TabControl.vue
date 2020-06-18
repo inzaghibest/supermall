@@ -39,6 +39,7 @@ export default {
         height: 40px;
         line-height: 40px;
         font-size: 16px;
+        background-color: #fff;
     }
 
     .tab-control-item span{
@@ -53,7 +54,6 @@ export default {
     .active span{
         color: var(--color-high-text);
         border-bottom: 3px solid var(--color-high-text);
-
     }
 
 </style>

@@ -1,25 +1,31 @@
 <template>
     <div id="home">
+      <!-- 1. 导航 -->
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
+       <tab-control v-show="isTabFixed" class="fixed" @itemClick="tabClick"
+                 :titles="['流行', '新款', '精选']"></tab-control>
+       <!-- 2.滚动区域 -->
        <scroll class="content" ref = "scroll" 
               :probeType = "3" 
               :pull-up-load = "true"
               @scroll="contentScroll"
               @pullUp="pullUp">
+          <!-- 3.轮播图 -->
           <home-swiper :banners = "banners" @homeimgload = "homeImgLoad"/>
-
+          <!-- 4. 十点抢券 -->
           <remommend-view :recommends = "recommends"/>
-
+          <!-- 5.本周流行 -->
           <feature-view/>
-
-          <tab-control v-show="isTabFixed" class="fiexd" ref="tabControl"
+          <!-- 6. 流行，新款，精选 -->
+          <tab-control   ref="tabControl"
                        :titles = "['流行',  '新款', '精选']" 
                        @tabClick="tabClick"/>
-
+          <!-- 7. 商品展示 -->
           <goods-list :goods = "showGoods"/>
        </scroll>
+       <!-- 8. 回到顶部 -->
        <back-top @click.native = "backClick" v-show = "isShow"/>
     </div>
 </template>
@@ -81,25 +87,29 @@ export default {
         this.getHomeGoodsD('pop');
         this.getHomeGoodsD('new');
         this.getHomeGoodsD('sell');
+
+
   },
   mounted () {
-        // 监听图片加载完成事件
+        // 监听图片加载完成事件，刷新scroll重新计算高度，解决滚动高度计算错误问题
         const refresh = debounce(this.$refs.scroll.refresh, 200)
         this.$bus.$on('itemImgLoad', () => {
           refresh()
         })
 
-        // 获取tab-control的offsettop属性
+        // 获取tab-control的offsettop属性，对tab导航实现滚动到一定区域显示和隐藏。
         // 所有的组件都有一个$el属性,用于获取组件中的元素
         // this.tabOffsetTop = this.$refs.TabControl.$el.offsetTop
         // console.log(this.$refs.tabControl.$el.offsetTop)
-              // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+        // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+        setTimeout(()=> {
+        console.log(this.$refs.tabControl.$el.offsetTop)
+        }, 3000)
+
+
+       
   },
   updated () {
-        this.$nextTick(() => {
-          this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
-          console.log(this.tabOffsetTop)
-        })
   },
   methods: {
     /** 
@@ -154,7 +164,8 @@ export default {
     },
 
     homeImgLoad () {
-
+                  this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
+          console.log(this.tabOffsetTop)
     }
   }
 }
@@ -182,8 +193,9 @@ export default {
     /* position: sticky; */
     position: fixed;
     top: 44px;
-    z-index: 9;
-    background-color: #fff;
+    left: 0;
+    right: 0;
+    z-index: 99;
   }
   .content {
     /* height: 300px; */
