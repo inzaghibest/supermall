@@ -3,6 +3,10 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
+       <!-- 用来占位的tab-control -->
+      <tab-control v-show="isTabFixed" class="fiexd"
+                   :titles = "['流行',  '新款', '精选']" 
+                   @tabClick="tabClick"/>
        <scroll class="content" ref = "scroll" 
               :probeType = "3" 
               :pull-up-load = "true"
@@ -14,7 +18,7 @@
 
           <feature-view/>
 
-          <tab-control v-show="isTabFixed" class="fiexd" ref="tabControl"
+          <tab-control  ref="tabControl"
                        :titles = "['流行',  '新款', '精选']" 
                        @tabClick="tabClick"/>
 
@@ -65,7 +69,8 @@ export default {
       currentType: 'pop',
       isShow: false,
       tabOffsetTop: 0,
-      isTabFixed: false
+      isTabFixed: false,
+      currentY: 0
     }
   },
   computed: {
@@ -94,12 +99,20 @@ export default {
         // this.tabOffsetTop = this.$refs.TabControl.$el.offsetTop
         // console.log(this.$refs.tabControl.$el.offsetTop)
               // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+
   },
   updated () {
-        this.$nextTick(() => {
-          this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
-          console.log(this.tabOffsetTop)
-        })
+  },
+
+  // 保持home当前滚动的状态
+  activated () {
+    // console.log('--------activated-------------')
+    this.$refs.scroll.scrollTo(0, this.currentY, 0)
+    this.$refs.scroll.refresh()
+  },
+  deactivated () {
+    // console.log('--------deactivated-------------')
+    this.currentY = this.$refs.scroll.getScrollY()
   },
   methods: {
     /** 
@@ -154,7 +167,8 @@ export default {
     },
 
     homeImgLoad () {
-
+        this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
+        console.log(this.tabOffsetTop)
     }
   }
 }
@@ -178,10 +192,12 @@ export default {
     height: 100vh;
   }
 
-  .fixed {
+  .fiexd {
     /* position: sticky; */
-    position: fixed;
+    position: fixed; 
     top: 44px;
+    left: 0;
+    right: 0;
     z-index: 9;
     background-color: #fff;
   }
