@@ -4,7 +4,7 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
-       <tab-control v-show="isTabFixed" class="fixed" @itemClick="tabClick"
+       <tab-control v-show="isTabFixed" class="fixed" @itemClick="tabClickhidle"
                  :titles="['流行', '新款', '精选']"></tab-control>
        <!-- 2.滚动区域 -->
        <scroll class="content" ref = "scroll" 
@@ -102,12 +102,6 @@ export default {
         // this.tabOffsetTop = this.$refs.TabControl.$el.offsetTop
         // console.log(this.$refs.tabControl.$el.offsetTop)
         // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
-        setTimeout(()=> {
-        console.log(this.$refs.tabControl.$el.offsetTop)
-        }, 3000)
-
-
-       
   },
   updated () {
   },
@@ -144,6 +138,10 @@ export default {
         case 2:
           this.currentType = 'sell'
       }
+    },
+
+    tabClickhidle (index) {
+      tabClick(index)
     },
 
     // 实现回到顶部的点击事件 
