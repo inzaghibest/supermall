@@ -1,6 +1,6 @@
 <template>
     <div class="goods-item">
-        <img :src="goodsItem.show.img" alt="" @load="imgLoad">
+        <img :src="showImg" alt="" @load="imgLoad" @click="itemClick">
         <div class="goods-info">
             <p>{{ goodsItem.title }}</p>
             <span class="price">{{ goodsItem.price }}</span>
@@ -20,9 +20,32 @@ export default {
             }
         }
     },
+    computed: {
+      showImg () {
+        return this.goodsItem.image || this.goodsItem.show.img
+      }
+    },
     methods: {
       imgLoad () {
-        this.$bus.$emit('itemImgLoad')
+        /**
+         * 由于Home.vue和Detail.vue都用到了改组件,所以在Home页面不需要Detail接收此事件，
+         * 解决方法一： 路由
+         */
+        // this.$bus.$emit('itemImgLoad')
+        if(this.$route.path.indexOf('/home') === 0)
+        {
+          this.$bus.$emit('homeItemImgLoad')
+        }else if(this.$route.path.indexOf('/detail') === 0)
+        {
+          this.$bus.$emit('detailItemImgLoad')
+        }else{
+
+        }
+      },
+      itemClick () {
+        const ext = (this.goodsItem.iid|| this.goodsItem.shop_id)
+        // console.log('------------' + this.goodsItem.shop_id + '--------------------')
+        this.$router.push('/detail/' + ext)
       }
     }
 }

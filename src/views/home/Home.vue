@@ -4,9 +4,10 @@
        <nav-bar class="home-nav">
          <div slot="center">购物街</div>
        </nav-bar>
-       <tab-control v-show="isTabFixed" class="fixed" @itemClick="tabClickhidle"
-                 :titles="['流行', '新款', '精选']"></tab-control>
-       <!-- 2.滚动区域 -->
+       <!-- 用来占位的tab-control -->
+      <tab-control ref="tabControlHide" v-show="isTabFixed" class="fiexd"
+                   :titles = "['流行',  '新款', '精选']" 
+                   @tabClick="tabClick"/>
        <scroll class="content" ref = "scroll" 
               :probeType = "3" 
               :pull-up-load = "true"
@@ -18,8 +19,8 @@
           <remommend-view :recommends = "recommends"/>
           <!-- 5.本周流行 -->
           <feature-view/>
-          <!-- 6. 流行，新款，精选 -->
-          <tab-control   ref="tabControl"
+
+          <tab-control  ref="tabControl"
                        :titles = "['流行',  '新款', '精选']" 
                        @tabClick="tabClick"/>
           <!-- 7. 商品展示 -->
@@ -40,7 +41,7 @@ import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goodslist/GoodsList'
 import Scroll from 'components/common/scroll/Scroll'
 import BackTop from 'components/content/backTop/BackTop'
-import {debounce} from 'common/utils.js'
+import {debouce} from 'common/utils.js'
 import { getHomeMultiData, getHomeGoods } from 'network/home'
 
 
@@ -71,7 +72,9 @@ export default {
       currentType: 'pop',
       isShow: false,
       tabOffsetTop: 0,
-      isTabFixed: false
+      isTabFixed: false,
+      currentY: 0
+      // itemImgListener: null
     }
   },
   computed: {
@@ -92,8 +95,8 @@ export default {
   },
   mounted () {
         // 监听图片加载完成事件，刷新scroll重新计算高度，解决滚动高度计算错误问题
-        const refresh = debounce(this.$refs.scroll.refresh, 200)
-        this.$bus.$on('itemImgLoad', () => {
+        let refresh = debouce(this.$refs.scroll.refresh, 200)
+        this.$bus.$on('homeItemImgLoad', () => {
           refresh()
         })
 
@@ -101,9 +104,30 @@ export default {
         // 所有的组件都有一个$el属性,用于获取组件中的元素
         // this.tabOffsetTop = this.$refs.TabControl.$el.offsetTop
         // console.log(this.$refs.tabControl.$el.offsetTop)
-        // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+              // 下次更新DOM时,获取新的tabOffsetTop值(不保险,可以在updated钩子中获取)
+
   },
   updated () {
+  },
+
+  // 保持home当前滚动的状态
+  activated () {
+    // 1.保持home当前的滚动状态
+    this.$refs.scroll.scrollTo(0, this.currentY, 0)
+    this.$refs.scroll.refresh()
+
+    // 2. 
+    // this.$bus.$on('itemImgLoad', this.itemImgListener)
+
+  },
+  deactivated () {
+    // 1. 保存离开时的Y值.
+    this.currentY = this.$refs.scroll.getScrollY()
+
+   // 2. 取消图片事件监听
+  //  this.$bus.$off('itemImgLoad', this.itemImgListener)
+
+ 
   },
   methods: {
     /** 
@@ -138,6 +162,9 @@ export default {
         case 2:
           this.currentType = 'sell'
       }
+      // 让两个组件的当前选中保持一致
+      this.$refs.tabControl.currentIndex = index
+      this.$refs.tabControlHide.currentIndex = index
     },
 
     tabClickhidle (index) {
@@ -162,8 +189,8 @@ export default {
     },
 
     homeImgLoad () {
-                  this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
-          console.log(this.tabOffsetTop)
+        this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop
+        console.log(this.tabOffsetTop)
     }
   }
 }
@@ -187,13 +214,14 @@ export default {
     height: 100vh;
   }
 
-  .fixed {
+  .fiexd {
     /* position: sticky; */
-    position: fixed;
+    position: fixed; 
     top: 44px;
     left: 0;
     right: 0;
-    z-index: 99;
+    z-index: 9;
+    background-color: #fff;
   }
   .content {
     /* height: 300px; */
