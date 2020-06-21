@@ -40,9 +40,10 @@ import FeatureView from './childComps/FeatureView'
 import TabControl from 'components/content/tabControl/TabControl'
 import GoodsList from 'components/content/goodslist/GoodsList'
 import Scroll from 'components/common/scroll/Scroll'
-import BackTop from 'components/content/backTop/BackTop'
+import MainTabBar from 'components/content/MainTabBar'
 import {debouce} from 'common/utils.js'
 import { getHomeMultiData, getHomeGoods } from 'network/home'
+import {backTopMinix} from 'common/mixin.js'
 
 
 export default {
@@ -54,9 +55,10 @@ export default {
     FeatureView,
     TabControl,
     GoodsList,
-    Scroll,
-    BackTop
+    Scroll
+    // MainTabBar
   },
+  mixins: [backTopMinix],
   data () {
     return {
       // 轮播图
@@ -70,7 +72,6 @@ export default {
         'new': {page: 0, list: []}
       },
       currentType: 'pop',
-      isShow: false,
       tabOffsetTop: 0,
       isTabFixed: false,
       currentY: 0
@@ -169,11 +170,6 @@ export default {
 
     tabClickhidle (index) {
       tabClick(index)
-    },
-
-    // 实现回到顶部的点击事件 
-    backClick () {
-      this.$refs.scroll.scrollTo(0, 0, 800)
     },
 
     // 滚动事件监听

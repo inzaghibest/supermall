@@ -1,8 +1,8 @@
 <template>
   <div id = "detail">
       <!-- 1. 导航 -->
-      <DetailNavBar class="detail-nav-bar" @titleClick="titleClick"/>
-      <scroll class="detail-scroll" ref="detailScroll">
+      <DetailNavBar class="detail-nav-bar" @titleClick="titleClick" ref="detailNav"/>
+      <scroll class="detail-scroll" ref="scroll" :probeType = "3" @scroll="contentScroll">
           <!-- 2. 轮播图 -->
         <detail-swiper :top-images = "topImages"/>
         <!-- 3. 商品基本信息 -->
@@ -19,6 +19,8 @@
         <!-- 8. 推荐 -->
         <goods-list ref="recommnd" :goods = "recommndInfo"/>
       </scroll>
+      <detail-bottom-bar @addToCart = "addToCart"/>
+      <back-top v-show="isShow" @click.native="backClick"/>
   </div>
 </template>
 
@@ -33,7 +35,10 @@ import DetailGoodsInfo from './childComps/DetailGoodsInfo'
 import DetailParamInfo from './childComps/DetailParamInfo'
 import DetailCommentInfo from './childComps/DetailCommentInfo'
 import GoodsList from 'components/content/goodslist/GoodsList'
+import DetailBottomBar from './childComps/DetailBottomBar'
 import {debouce} from 'common/utils.js'
+import {backTopMinix} from 'common/mixin.js'
+import {mapActions} from 'vuex'
 export default {
     name: 'Detail',
     data () {
@@ -47,9 +52,11 @@ export default {
             commentInfo: {},
             recommndInfo: [],
             titlesScrollY: [],
-            getScrollY: null
+            getScrollY: null,
+            currentIndex: 0
         }
     },
+    mixins: [backTopMinix],
     created () {
         this.iid = this.$route.params.iid
 
@@ -92,9 +99,10 @@ export default {
             this.getScrollY = debouce(()=>{
                 this.titlesScrollY = []
                 this.titlesScrollY.push(0)
-                this.titlesScrollY.push(this.$refs.params.$el.offsetTop - 44)
-                this.titlesScrollY.push(this.$refs.comment.$el.offsetTop -44 )
-                this.titlesScrollY.push(this.$refs.recommnd.$el.offsetTop - 44)
+                this.titlesScrollY.push(this.$refs.params.$el.offsetTop )
+                this.titlesScrollY.push(this.$refs.comment.$el.offsetTop )
+                this.titlesScrollY.push(this.$refs.recommnd.$el.offsetTop )
+                this.titlesScrollY.push(Number.MAX_VALUE)
                 console.log(this.titlesScrollY)
             }, 200)
         })
@@ -115,16 +123,61 @@ export default {
         DetailGoodsInfo,
         DetailParamInfo,
         DetailCommentInfo,
-        GoodsList
+        GoodsList,
+        DetailBottomBar
     },
     methods: {
+        ...mapActions(['addCart']),
         detailImgLoad () {
-            this.$refs.detailScroll.refresh()
+            this.$refs.scroll.refresh()
             this.getScrollY()
         },
         titleClick (index) {
-            this.$refs.detailScroll.scrollTo(0, -this.titlesScrollY[index], 500)
+            this.$refs.scroll.scrollTo(0, -this.titlesScrollY[index], 500)
+        },
+        // 监听滚动条的滚动
+        contentScroll (position) {
+            for(let i = 0; i<this.titlesScrollY.length - 1; i++)
+            {
+                if(this.currentIndex !== i && 
+                (-position.y >= this.titlesScrollY[i] && -position.y < this.titlesScrollY[i+1]))
+                {
+                    this.currentIndex = i
+                    this.$refs.detailNav.currentIndex = i
+                }
+            }
+
+            // backTop的是否显示
+            this.isShow = (0 - position.y) > 1000 ? true : false
+        },
+        // 添加到购物车
+        addToCart () {
+            // 1.获取购物车信息
+            const product = {}
+            product.image = this.topImages[0]
+            product.title = this.goodsInfo.title
+            product.desc = this.goodsInfo.desc
+            product.price = this.goodsInfo.realPrice
+            product.iid = this.iid
+
+
+            // 2. 添加信息到购物车
+            // 返回Promise
+            // this.$store.dispatch('addCart', product).then(res => {
+            //     console.log(res)
+            // })
+            this.addCart(product).then(res=>{
+                // this.message = res
+                // this.isToastShow = true
+
+                // setTimeout(()=> {
+                //     this.message = ''
+                //     this.isToastShow = false
+                // }, 2000)
+                this.$toast.show(res, 2000)
+            })
         }
+
     }
 }
 </script>
